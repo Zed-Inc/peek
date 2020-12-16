@@ -72,28 +72,51 @@ class Peek
     end
     @file = File.open(@filename) # open the file
     puts "taking a quick peek at #{l} line(s) of #{f}"
+    @filetype = File.extname(@filename) # this will get the file extension
 
   end
 
   def displayFile
-    # if @filetype == "json"
-    #   puts "file is a json file"
-    #   display_json()
-    # elsif @filetype == "csv"
-    #   display_csv()
-    # else
-    #   display_other()
-    # end
     puts ""
-    display_csv()
+    if @filetype == ".csv"
+      display_csv()
+    else
+      display_other()
+    end
   end
 
 
   private def display_csv
-    # @file.readlines do |line|
-    #   puts line
-    #   self.currentLine += 1
-    # end
+    currentLine : Int32 = 0
+    
+    @file.each_line { |line|
+      if currentLine >= @linesToDisplay
+        puts "<-- End peek -->"
+        break
+      end
+
+      # here we want to display the header
+      if currentLine == 0
+        header = line.split(',')
+        format_gap = 20
+        display = ""
+        (header.size()).times do |index|
+          # puts header[index]
+          display += "%-#{format_gap}s|" % [header[index]]
+        end
+        puts display
+      end
+
+      
+
+      
+      puts line
+      currentLine += 1
+    }
+    
+  end
+  
+  private def display_other
     currentLine : Int32 = 0
     @file.each_line { |line|
       if currentLine >= @linesToDisplay
@@ -103,16 +126,9 @@ class Peek
       puts line
       currentLine += 1
     }
-    
   end
 
-
-  private def display_json
-  end
-  
-  private def display_other
-  end
-
+  # close the file, this should be called at the end of the program
   def closeFile
     @file.close()
   end
