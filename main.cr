@@ -66,10 +66,10 @@ class Peek
   def initialize(filename f : String, lines l : Int32)
     @linesToDisplay = l
     @filename = f
-    # if File.file?(f)
-       # puts "failed to open file, make sure the filename or filepath is correct"
-      # exit
-    # end
+    if !File.exists?(f)
+       puts "failed to open file, make sure the filename or filepath is correct"
+      exit
+    end
     @file = File.open(@filename) # open the file
     puts "taking a quick peek at #{l} line(s) of #{f}"
 
@@ -105,7 +105,8 @@ class Peek
     }
     
   end
-  
+
+
   private def display_json
   end
   
