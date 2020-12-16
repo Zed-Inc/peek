@@ -10,6 +10,7 @@ require "option_parser"
 peek : Peek # this is our instance that the whole program uses
 lines : Int32 = 0
 filename : String = ""
+cellWidth : Int32 = 0
 
 
 # TODO add in --help flag support
@@ -32,6 +33,27 @@ OptionParser.parse do |parser|
       exit
     end
   end
+  
+  parser.on "--format", "--format", "used to define the cell width when displaying a csv file" do |w|
+    begin
+      cellWidth = w.to_i
+      puts "cell width #{w}"
+    rescue
+      puts "non-numeric input was entered with the --format flag"
+      exit
+    end
+  end
+
+  parser.on "-h","--help", "the help command" do
+    puts "
+Usage => peek -f=[filename here] -l=[the number of lines you want to print here]
+-f or --file
+-l or --lines
+
+if looking at csv files you can use the '--format' flag to specify the cell width
+         "
+    exit
+  end
 end
 
 
@@ -45,8 +67,7 @@ elsif lines == 0
   exit
 end
 
-peek = Peek.new(filename, lines) # create our class instance
-
+peek = Peek.new(filename, lines, cellWidth == 0 ? 20 : cellWidth) # create our class instance
 peek.displayFile()
 peek.closeFile()
 
@@ -60,12 +81,14 @@ class Peek
   @filename : String
   @fileType : String = ""
   @linesToDisplay : Int32
-  # currentLine : Int32 = 0 # store the current line we are on
   @file : File # store the file
+  property format_gap : Int32 # the default value
   
-  def initialize(filename f : String, lines l : Int32)
+  def initialize(filename f : String, lines l : Int32, format_gap gap : Int32)
     @linesToDisplay = l
     @filename = f
+    @format_gap = gap
+    # check if the file exists before opening it
     if !File.exists?(f)
        puts "failed to open file, make sure the filename or filepath is correct"
       exit
@@ -73,9 +96,9 @@ class Peek
     @file = File.open(@filename) # open the file
     puts "taking a quick peek at #{l} line(s) of #{f}"
     @filetype = File.extname(@filename) # this will get the file extension
-
   end
 
+  
   def displayFile
     puts ""
     if @filetype == ".csv"
@@ -98,19 +121,23 @@ class Peek
       # here we want to display the header
       if currentLine == 0
         header = line.split(',')
-        format_gap = 20
+        
         display = ""
         (header.size()).times do |index|
           # puts header[index]
-          display += "%-#{format_gap}s|" % [header[index]]
+          display += "%-#{@format_gap}s|" % [header[index]]
+        end
+        # the end part of this line basically just concatnates the "-" character n times by the format_gap variable
+        # and the number of headers displayed, this gives us a nice dotted line that's not hardcoded in
+        puts "#{display}\n#{"-"*@format_gap*header.size()}"
+      else
+        header = line.split(',')
+        display = ""
+        (header.size()).times do |index|
+          display += "%-#{@format_gap}s|" % [header[index]]
         end
         puts display
       end
-
-      
-
-      
-      puts line
       currentLine += 1
     }
     
